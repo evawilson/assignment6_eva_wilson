@@ -1,0 +1,101 @@
+---
+title: "Assignment 6 Task 2: Political Affiliations and Environmental Beliefs"
+author: "Eva Wilson"
+date: "11/22/2021"
+output: 
+  html_document: 
+    theme: readable
+---
+
+- Do not include code and titles?
+- Consider creating a final table 
+- Add one more sentence to analysis
+
+```{r setup, include = FALSE, message = FALSE, warning = FALSE }
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+# Attach packages:
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom)
+library(kableExtra)
+library(equatiomatic)
+```
+
+### 1. Overview 
+
+In the following document, we describe the relationship between individuals' political affiliations and whether or not they consider themselves an environmentalist. 
+
+The data are from a survey conducted by Chelsea Batavia and Andrews Forest LTER to explore "Influences on charitable giving for conservation." The survey was conducted in August 2017 and yielded 1,331 individual respondents.
+
+### 2. Read in the data 
+
+```{r include = FALSE} 
+survey <- read.csv(here("data","conservation_survey.csv")) %>% 
+  clean_names()
+```
+
+### 3. Wrangle the data 
+
+- Select variables env_id and pol_or
+- Add a new column that bins the political party into "conservative" and "liberal"
+- Exclude political affiliations (4,8,9)
+```{r include = FALSE}
+env_pol <- survey %>% 
+  select(env_id, pol_or) %>% 
+  mutate(pol_affiliation = case_when(
+    pol_or %in% c(1,2,3) ~ "conservative",
+    pol_or %in% c(5,6,7) ~ "liberal")) %>% 
+  mutate(environmentalist = case_when(
+    env_id %in% c(1) ~ "Yes",
+    env_id %in% c(2) ~ "No",
+    env_id %in% c(3) ~ "Unsure")) %>% 
+  drop_na(pol_affiliation)
+```
+
+### 4. Visualize the data 
+
+#### 4A. Create a table that shows the relationship between political affiliation (liberal/conservative) and identification as an environmentalist
+
+```{r include = FALSE}
+env_pol %>% 
+  count(pol_affiliation, environmentalist)
+
+env_pol_counts <- env_pol %>% 
+  janitor::tabyl(pol_affiliation, environmentalist)
+
+env_pol_proportions <- env_pol_counts %>%
+  janitor::adorn_percentages() %>%
+  janitor::adorn_pct_formatting(digits = 2) %>% 
+  janitor::adorn_ns()
+```
+
+#### 4B. Create a contingency table 
+
+```{r include = FALSE}
+env_pol_ct <- env_pol_counts %>% 
+  column_to_rownames(var = "pol_affiliation")
+
+env_pol_ct
+```
+
+#### 4C. Conduct a chi-square test 
+
+```{r include = FALSE}
+env_pol_x2 <- chisq.test(env_pol_ct)
+
+env_pol_x2
+
+env_pol_tidy <- broom::tidy(env_pol_x2)
+
+env_pol_tidy
+```
+
+There is a significant association (i.e. non-independence) between an individual's political affiliation and their identification as an environmentalist ($\chi$^2^(`r env_pol_tidy$parameter`) = `r env_pol_tidy$statistic`, *p* = `r env_pol_tidy$p.value`). 
+
+### 5. References
+
+**Data citation**: Andrews Forest LTER Site and C. Batavia. 2019. Influences on charitable giving for conservation: Online survey data of 1,331 respondents across the US, August 2017 ver 3. Environmental Data Initiative. https://doi.org/10.6073/pasta/926e6270e324a1322a900da14d38b96c
+
+Metadata, including survey questions and possible responses, are here: https://portal.edirepository.org/nis/metadataviewer?packageid=knb-lter-and.5444.3
