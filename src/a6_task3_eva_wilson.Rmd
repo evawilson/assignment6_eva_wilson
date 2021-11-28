@@ -1,5 +1,5 @@
 ---
-title: "Assignment 6 Task 3"
+title: "An Analysis of Female Lizard Lengths in the Jornada Basin"
 author: "Eva Wilson"
 date: "11/24/2021"
 output: 
@@ -11,7 +11,7 @@ output:
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
-# Attach packages:
+# attach packages:
 library(tidyverse)
 library(here)
 library(janitor)
@@ -22,17 +22,17 @@ library(effsize)
 ```
 
 ### Overview 
-You are asked to compare total lengths (variable = total_length, in millimeters) for female lizards (sex == “F”) of two species (variable spp): CNUN (Cnemidophorus uniparens, the Desert Grassland lizard) and CNTE (Cnemidophorus tessalatus, the Colorado Checkered lizard).
+This report compares body lengths between female Colorado Checkered and Desert Grassland lizards, using the Jornada Basin LTER lizards data. First, we create a jitterplot and a table of summary statistics to show the differences in female body lengths. Then, we calculate female body length differences between species using two-sample t-tests. Finally, we describe differences between groups by Cohen's *d* effect size.
 
 ```{r include = FALSE}
-# Read in the data:
+# read in the data:
 lizards <- read.csv(here("data", "lizards.csv")) %>% 
   clean_names()
 ```
 
 ### Analysis
 ```{r include = FALSE}
-# Wrangle data 
+# wrangle data 
 lizards_clean <- lizards %>% 
   select(spp, sex, total_length) %>% 
   filter(sex == "F") %>% 
@@ -44,18 +44,21 @@ lizards_clean <- lizards %>%
 ```
 
 ```{r}
-# Create a data visualization
+# create a data visualization
 ggplot(data = lizards_clean, aes(x = spp, y = total_length)) + 
   geom_jitter(aes(color = spp)) +
-  labs(x = "Species", 
+  labs(x = "Species (Name)", 
        y = "Body Length (mm)", 
-       color = "Species",
-       title = "Female Lizard Body Lengths (WILSON)", 
+       title = "Female Lizard Body Lengths, by Species (WILSON)",
+       subtitle = "A comparison of Cnemidorphorus uniparens and Cnemidorphorus tessalatua lizards",
        caption = "Data Source: Lightfoot, D. 2017.") + 
   theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"), plot.subtitle = element_text(hjust = 0.5)) +
   theme(legend.position = "none") +
-  theme(strip.background = element_rect(color="white", fill="gray"))
+  theme(strip.background = element_rect(color = "white", fill = "gray")) +
+  theme(panel.border = element_rect(color = "black", fill = NA, 
+                                    size = 0.2)) +
+  theme(plot.caption = element_text(hjust = 1, face = "italic"))
 ```
 
 **Figure 1. Female Lizard Body Lengths** Depicts respective distributions of female body lengths for the Cnemidorphorus tessalatua and the Cnemidophorus uniparens lizard species. On average, the Cnemidorphorus tesslatua species (n = 28) has a longer mean body length than the Cnemidophorus uniparens species (n = 40). Further analysis can be seen below (**Table 1.**).
@@ -63,7 +66,7 @@ ggplot(data = lizards_clean, aes(x = spp, y = total_length)) +
 **Table 1. Descriptive statistics** (sample size, mean, and standard deviation) for female lizard body lengths, arranged by species. 
 Data: Lightfoot, D. 2017.
 ```{r include = FALSE}
-# Store a summary table to compliment the histogram above 
+# store a summary table to compliment the histogram above 
 lizards_summary <- lizards_clean %>% 
   group_by(spp) %>% 
   summarize(sample_size = n(),
@@ -72,9 +75,9 @@ lizards_summary <- lizards_clean %>%
 ```
 
 ```{r}
-# Present a clean summary table
+# present a clean summary table
 lizards_summary %>% 
-  kable(col.names = c("Species",
+  kable(col.names = c("Lizard Species",
                       "Sample Size (n)",
                       "Mean Body Length (mm)",
                       "Standard Deviation (mm)"),
@@ -86,21 +89,21 @@ lizards_summary %>%
 ```
 
 ```{r include = FALSE}
-# Create a histogram to explore normality of data
+# create a histogram to explore normality of data
 ggplot(data = lizards_clean, aes(x = total_length)) +
   geom_histogram(bins = 15) +
   facet_wrap(~spp)
 ```
 
 ```{r include = FALSE}
-# Create a qq plot to explore normality of data
+# create a qq plot to explore normality of data
 ggplot(data = lizards_clean, aes(sample = total_length)) +
   geom_qq() +
   facet_wrap(~spp)
 ```
 
 ```{r include = FALSE}
-# Store vectors to run a t-test
+# store vectors to run a t-test
 
 length_CNUN <- lizards_clean %>% 
   filter(spp == "Cnemidorphorus uniparens") %>%
@@ -115,7 +118,7 @@ summary(length_CNTE)
 ```
 
 ```{r include = FALSE}
-# Run a two-sample t-test and determine Cohen's D
+# run a two-sample t-test and determine Cohen's D
 
 lizard_t <- t.test(length_CNUN, length_CNTE, na.rm = TRUE)
 
