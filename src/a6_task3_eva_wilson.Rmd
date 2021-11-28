@@ -1,0 +1,134 @@
+---
+title: "Assignment 6 Task 3"
+author: "Eva Wilson"
+date: "11/24/2021"
+output: 
+  html_document: 
+    theme: readable
+    code_folding: hide
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+# Attach packages:
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom)
+library(kableExtra)
+library(equatiomatic)
+library(effsize)
+```
+
+### Overview 
+You are asked to compare total lengths (variable = total_length, in millimeters) for female lizards (sex == “F”) of two species (variable spp): CNUN (Cnemidophorus uniparens, the Desert Grassland lizard) and CNTE (Cnemidophorus tessalatus, the Colorado Checkered lizard).
+
+```{r include = FALSE}
+# Read in the data:
+lizards <- read.csv(here("data", "lizards.csv")) %>% 
+  clean_names()
+```
+
+### Analysis
+```{r include = FALSE}
+# Wrangle data 
+lizards_clean <- lizards %>% 
+  select(spp, sex, total_length) %>% 
+  filter(sex == "F") %>% 
+  filter(spp %in% c("CNUN","CNTE")) %>% 
+  mutate(spp = case_when(
+    spp == "CNUN" ~ "Cnemidorphorus uniparens",
+    spp == "CNTE" ~ "Cnemidorphorus tessalatua")) %>% 
+  drop_na(total_length)
+```
+
+```{r}
+# Create a data visualization
+ggplot(data = lizards_clean, aes(x = spp, y = total_length)) + 
+  geom_jitter(aes(color = spp)) +
+  labs(x = "Species", 
+       y = "Body Length (mm)", 
+       color = "Species",
+       title = "Female Lizard Body Lengths (WILSON)", 
+       caption = "Data Source: Lightfoot, D. 2017.") + 
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(legend.position = "none") +
+  theme(strip.background = element_rect(color="white", fill="gray"))
+```
+
+**Figure 1. Female Lizard Body Lengths** Depicts respective distributions of female body lengths for the Cnemidorphorus tessalatua and the Cnemidophorus uniparens lizard species. On average, the Cnemidorphorus tesslatua species (n = 28) has a longer mean body length than the Cnemidophorus uniparens species (n = 40). Further analysis can be seen below (**Table 1.**).
+
+**Table 1. Descriptive statistics** (sample size, mean, and standard deviation) for female lizard body lengths, arranged by species. 
+Data: Lightfoot, D. 2017.
+```{r include = FALSE}
+# Store a summary table to compliment the histogram above 
+lizards_summary <- lizards_clean %>% 
+  group_by(spp) %>% 
+  summarize(sample_size = n(),
+            mean = (mean(total_length, na.rm = TRUE)),
+            sd = (sd(total_length, na.rm = TRUE)))
+```
+
+```{r}
+# Present a clean summary table
+lizards_summary %>% 
+  kable(col.names = c("Species",
+                      "Sample Size (n)",
+                      "Mean Body Length (mm)",
+                      "Standard Deviation (mm)"),
+        caption = "Table 1: Female Lizard Body Length Summary Statistics",
+        digits = 1) %>% 
+  kable_styling(full_width = FALSE, position = "left", 
+                html_font = "Georgia", font_size = 10,
+                bootstrap_options = "striped")
+```
+
+```{r include = FALSE}
+# Create a histogram to explore normality of data
+ggplot(data = lizards_clean, aes(x = total_length)) +
+  geom_histogram(bins = 15) +
+  facet_wrap(~spp)
+```
+
+```{r include = FALSE}
+# Create a qq plot to explore normality of data
+ggplot(data = lizards_clean, aes(sample = total_length)) +
+  geom_qq() +
+  facet_wrap(~spp)
+```
+
+```{r include = FALSE}
+# Store vectors to run a t-test
+
+length_CNUN <- lizards_clean %>% 
+  filter(spp == "Cnemidorphorus uniparens") %>%
+  pull(total_length)
+
+length_CNTE <- lizards_clean %>% 
+  filter(spp == "Cnemidorphorus tessalatua") %>% 
+  pull(total_length)
+
+summary(length_CNUN)
+summary(length_CNTE)
+```
+
+```{r include = FALSE}
+# Run a two-sample t-test and determine Cohen's D
+
+lizard_t <- t.test(length_CNUN, length_CNTE, na.rm = TRUE)
+
+lizard_t
+
+lizard_cohen <- cohen.d(length_CNUN, length_CNTE, na.rm = TRUE)
+
+lizard_cohen
+```
+The mean body length of female lizards for the xx species and the xx species were (`r round(lizards_summary$mean[1], 1)` mm +- `r round(lizards_summary$sd[1], 1)` mm) (mean and SD) and (`r round(lizards_summary$mean[2], 1)` mm +- `r round(lizards_summary$sd[2], 1)` g) (mean and SD), respectively. There is a large effect size (Cohen's *d* = `r round(lizard_cohen$estimate, 2)`). The difference was significant (t(`r round(lizard_t$parameter, 1)`) = `r round(lizard_t$statistic, 1)`, p = < .001. 
+
+### References
+
+**Data source**: Lightfoot, D. 2017. Lizard pitfall trap data (LTER-II, LTER-III) ver 36. Environmental Data Initiative. https://doi.org/10.6073/pasta/ff37b4cace16a9943575f3fd7067064e
+
+Metadata is here: https://portal.edirepository.org/nis/metadataviewer?packageid=knb-lter-jrn.210007001.36. 

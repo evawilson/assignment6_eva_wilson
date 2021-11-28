@@ -1,0 +1,24 @@
+---
+title: "Assignment 6 Task 4"
+author: "Eva Wilson"
+date: "11/28/2021"
+output: 
+  html_document: 
+    theme: readable
+    code_folding: hide
+---
+
+```{r setup, include = FALSE, message = FALSE, error = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, error = FALSE)
+
+# Attach packages:
+library(here)
+library(tidyverse)
+library(janitor)
+```
+
+```{r}
+# Read in the data:
+mono_lake <- read.csv(here("data", ""))
+```
+
