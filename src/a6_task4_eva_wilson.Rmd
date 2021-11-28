@@ -1,5 +1,5 @@
 ---
-title: "An Analysis of Mono Lake Levels"
+title: "An Analysis of Mono Lake Water Levels"
 author: "Eva Wilson"
 date: "11/28/2021"
 output: 
@@ -68,7 +68,7 @@ ggplot(data = mono_lake, aes(x = year,
 # label axes and add title
   labs(x = "Year",
        y = "Feet above Sea Level",
-       title = "Mono Lake Levels 1850 - 2017 (WILSON)",
+       title = "Mono Lake Water Levels 1850 - 2017 (WILSON)",
        subtitle = "Low water levels have implications for shrimp and bird populations",
        caption = "Data Source: Mono Basin Clearinghouse") +
   
